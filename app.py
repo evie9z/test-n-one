@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'hello world!!s'
+    return 'hello world!'
 
 @app.route('/train')
 def train_model():
