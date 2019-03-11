@@ -33,14 +33,14 @@ def load_zero_data():
     segments = []
     labels1 = []
 
-    for i in range(0, len(df) - N_TIME_STEPS, step):
-        a_x = df['a_x'].values[i: i + N_TIME_STEPS]
-        a_y = df['a_y'].values[i: i + N_TIME_STEPS]
-        a_z = df['a_z'].values[i: i + N_TIME_STEPS]
-        g_x = df['g_x'].values[i: i + N_TIME_STEPS]
-        g_y = df['g_y'].values[i: i + N_TIME_STEPS]
-        g_z = df['g_z'].values[i: i + N_TIME_STEPS]
-        label = stats.mode(df['target'][i: i + N_TIME_STEPS])[0][0]
+    for i in range(0, len(df) - n_time_steps, step):
+        a_x = df['a_x'].values[i: i + n_time_steps]
+        a_y = df['a_y'].values[i: i + n_time_steps]
+        a_z = df['a_z'].values[i: i + n_time_steps]
+        g_x = df['g_x'].values[i: i + n_time_steps]
+        g_y = df['g_y'].values[i: i + n_time_steps]
+        g_z = df['g_z'].values[i: i + n_time_steps]
+        label = stats.mode(df['target'][i: i + n_time_steps])[0][0]
         segments.append([g_x, g_y, g_z, a_x, a_y, a_z, ])
         labels1.append(label)
 
@@ -49,28 +49,28 @@ def load_zero_data():
     labels = np.asarray(pd.get_dummies(labels1), dtype=np.float32)
     return reshaped_segments, labels1
 
-def create_LSTM_model(inputs):
+def create_lstm_model(inputs):
     # variables for the model like features and steps to take
-    N_CLASSES = 4
-    N_HIDDEN_UNITS = 64
-    N_TIME_STEPS = 15
-    N_FEATURES = 6
+    n_classes = 4
+    n_hidden_units = 64
+    n_time_steps = 15
+    n_features = 6
 
     W = {
-        'hidden': tf.Variable(tf.random_normal([N_FEATURES, N_HIDDEN_UNITS])),
-        'output': tf.Variable(tf.random_normal([N_HIDDEN_UNITS, N_CLASSES]))
+        'hidden': tf.Variable(tf.random_normal([n_features, n_hidden_units])),
+        'output': tf.Variable(tf.random_normal([n_hidden_units, n_classes]))
     }
     biases = {
-        'hidden': tf.Variable(tf.random_normal([N_HIDDEN_UNITS], mean=1.0)),
-        'output': tf.Variable(tf.random_normal([N_CLASSES]))
+        'hidden': tf.Variable(tf.random_normal([n_hidden_units], mean=1.0)),
+        'output': tf.Variable(tf.random_normal([n_classes]))
     }
 
     X = tf.transpose(inputs, [1, 0, 2])
-    X = tf.reshape(X, [-1, N_FEATURES])
+    X = tf.reshape(X, [-1, n_features])
     hidden = tf.nn.relu(tf.matmul(X, W['hidden']) + biases['hidden'])
-    hidden = tf.split(hidden, N_TIME_STEPS, 0)
+    hidden = tf.split(hidden, n_time_steps, 0)
 
-    lstm_layers = [tf.contrib.rnn.BasicLSTMCell(N_HIDDEN_UNITS, forget_bias=1.0) for _ in range(2)]
+    lstm_layers = [tf.contrib.rnn.BasicLSTMCell(n_hidden_units, forget_bias=1.0) for _ in range(2)]
     lstm_layers = tf.contrib.rnn.MultiRNNCell(lstm_layers)
     outputs, _ = tf.contrib.rnn.static_rnn(lstm_layers, hidden, dtype=tf.float32)
 
@@ -131,13 +131,13 @@ def infinite_loop():
         print(labels.shape)
         X_train, X_test, y_train, y_test = train_test_split(
             reshaped_segments, labels, test_size=0.2, random_state=20)
-        N_EPOCHS = 150
-        BATCH_SIZE = 128
+        n_epochs = 150
+        batch_size = 128
 
         tf.reset_default_graph()
-        X = tf.placeholder(tf.float32, [None, N_TIME_STEPS, N_FEATURES], name="input")
-        Y = tf.placeholder(tf.float32, [None, N_CLASSES])
-        pred_Y = create_LSTM_model(X)
+        X = tf.placeholder(tf.float32, [None, n_time_steps, n_features], name="input")
+        Y = tf.placeholder(tf.float32, [None, n_classes])
+        pred_Y = create_lstm_model(X)
         pred_softmax = tf.nn.softmax(pred_Y, name="y_")
 
         l2 = L2_LOSS * \
@@ -158,9 +158,9 @@ def infinite_loop():
 
         train_count = len(X_train)
 
-        for i in range(1, N_EPOCHS + 1):
-            for start, end in zip(range(0, train_count, BATCH_SIZE),
-                                  range(BATCH_SIZE, train_count + 1, BATCH_SIZE)):
+        for i in range(1, n_epochs + 1):
+            for start, end in zip(range(0, train_count, batch_size),
+                                  range(batch_size, train_count + 1, batch_size)):
                 sess.run(optimizer, feed_dict={X: X_train[start:end],
                                                Y: y_train[start:end]})
 
@@ -181,7 +181,7 @@ def infinite_loop():
             print(f'epoch: {i} test accuracy: {acc_test} loss: {loss_test}')
             # saves the final version of the model
             # which creates 4 files!!!
-            if i == N_EPOCHS:
+            if i == n_epochs:
                 saver.save(sess, 'LSTM_15step', global_step=i)
         predictions, acc_final, loss_final = sess.run([pred_softmax, accuracy, loss], feed_dict={X: X_test, Y: y_test})
 
@@ -249,9 +249,9 @@ if __name__ == "__main__":
 
     tf.reset_default_graph()
 
-    X = tf.placeholder(tf.float32, [None, N_TIME_STEPS, N_FEATURES], name="input")
-    Y = tf.placeholder(tf.float32, [None, N_CLASSES])
-    pred_Y = create_LSTM_model(X)
+    X = tf.placeholder(tf.float32, [None, n_time_steps, n_features], name="input")
+    Y = tf.placeholder(tf.float32, [None, n_classes])
+    pred_Y = create_lstm_model(X)
     pred_softmax = tf.nn.softmax(pred_Y, name="y_")
     L2_LOSS = 0.0015
     l2 = L2_LOSS * \
