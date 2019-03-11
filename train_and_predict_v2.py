@@ -7,8 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1dgTUQEOqulO_qp_58X3wbLDZbV84oO8b
 """
 
-!pip install pyrebase
-
 import pandas as pd
 import numpy as np
 import pickle
