@@ -237,6 +237,10 @@ def infinite_loop():
                 prev_data = dataset
                 time.sleep(0.1)
 
+@app.route('/test')
+def test():
+    return "It's running"
+
 
 if __name__ == "__main__":
 
