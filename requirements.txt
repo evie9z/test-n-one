@@ -1,0 +1,8 @@
+--find-links wheelhouse
+pandas
+numpy
+matplotlib
+scipy
+tensorflow
+scikit-learn
+pyrebase
