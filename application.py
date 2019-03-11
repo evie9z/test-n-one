@@ -9,6 +9,11 @@ import time
 
 app = Flask(__name__)
 
+n_classes = 4
+n_hidden_units = 64
+n_time_steps = 15
+n_features = 6
+
 def firebase_initialization():
     # code below sets up pyrebase and receiving function
     config = {
@@ -51,10 +56,6 @@ def load_zero_data():
 
 def create_lstm_model(inputs):
     # variables for the model like features and steps to take
-    n_classes = 4
-    n_hidden_units = 64
-    n_time_steps = 15
-    n_features = 6
 
     W = {
         'hidden': tf.Variable(tf.random_normal([n_features, n_hidden_units])),
@@ -82,6 +83,34 @@ def create_lstm_model(inputs):
 def data_receiving():
     dataset = db.get().val()
     return dataset
+
+tf.reset_default_graph()
+
+X = tf.placeholder(tf.float32, [None, n_time_steps, n_features], name="input")
+Y = tf.placeholder(tf.float32, [None, n_classes])
+pred_Y = create_lstm_model(X)
+pred_softmax = tf.nn.softmax(pred_Y, name="y_")
+L2_LOSS = 0.0015
+l2 = L2_LOSS * \
+     sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables())
+loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred_Y, labels=Y)) + l2
+
+LEARNING_RATE = 0.005
+optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE).minimize(loss)
+correct_pred = tf.equal(tf.argmax(pred_softmax, 1), tf.argmax(Y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, dtype=tf.float32))
+
+# some one time variable setup
+motions = ['not cooking', 'cutting', 'whisking', 'saute']
+
+model_train = False
+dataset = data_receiving()
+dataset = dataset['dataset']
+prev_data = np.asarray(dataset, dtype=np.float32)
+
+# running the while loop starts here
+prev_step = - 1
+step = - 1
 
 @app.route('/train')
 def infinite_loop():
@@ -247,32 +276,4 @@ if __name__ == "__main__":
     db = firebase_initialization()
     reshaped_segments, labels1 = load_zero_data()
 
-    tf.reset_default_graph()
-
-    X = tf.placeholder(tf.float32, [None, n_time_steps, n_features], name="input")
-    Y = tf.placeholder(tf.float32, [None, n_classes])
-    pred_Y = create_lstm_model(X)
-    pred_softmax = tf.nn.softmax(pred_Y, name="y_")
-    L2_LOSS = 0.0015
-    l2 = L2_LOSS * \
-         sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables())
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred_Y, labels=Y)) + l2
-
-    LEARNING_RATE = 0.005
-    optimizer = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE).minimize(loss)
-    correct_pred = tf.equal(tf.argmax(pred_softmax, 1), tf.argmax(Y, 1))
-    accuracy = tf.reduce_mean(tf.cast(correct_pred, dtype=tf.float32))
-
-    # some one time variable setup
-    motions = ['not cooking', 'cutting', 'whisking', 'saute']
-
-    model_train = False
-    dataset = data_receiving()
-    dataset = dataset['dataset']
-    prev_data = np.asarray(dataset, dtype=np.float32)
-
-    # running the while loop starts here
-    prev_step = - 1
-    step = - 1
-
-    app.run()
+    app.run(host="https://test-n-one-smart-kitchen.azurewebsites.net")
