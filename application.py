@@ -273,4 +273,5 @@ if __name__ == "__main__":
     print("Start running!")
     print()
     print("I'm so excited!!!!")
-    app.run(host='https://test-n-one-smart-kitchen.azurewebsites.net', port=8000, debug=True)
+    app.run()
+    # app.run(host='https://test-n-one-smart-kitchen.azurewebsites.net', port=8000, debug=True)
