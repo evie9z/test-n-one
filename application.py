@@ -110,6 +110,10 @@ prev_data = np.asarray(dataset, dtype=np.float32)
 prev_step =- 1
 step =- 1
 
+@app.route('/', methods=['GET'])
+def root():
+    return render_template('index.html')
+
 @app.route('/')
 def infinite_loop():
     global prev_step, prev_data, reshaped_segments, labels1
