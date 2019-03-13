@@ -276,5 +276,5 @@ def infinite_loop():
 if __name__ == "__main__":
     print("Start running!")
     print("I'm so excited!!!!")
-    app.run(host="127.0.0.1", port=8080, debug=True)
+    app.run(host="localhost", port=8000, debug=True)
     # app.run(host='https://test-n-one-smart-kitchen.azurewebsites.net', port=8000, debug=True)
