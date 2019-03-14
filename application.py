@@ -154,16 +154,13 @@ def infinite_loop():
                 prev_step = step
         # once you are finished training the model
         if training == True and step >= 405 and step != -1:
-            #         print(step)
-            #         print(labels1.shape)
             print(reshaped_segments.shape)
             print(len(labels1))
             labels = np.asarray(pd.get_dummies(labels1), dtype=np.float32)
 
             X_train, X_test, y_train, y_test = train_test_split(
                 reshaped_segments, labels, test_size=0.2, random_state=20)
-            #         print(X_train.shape)
-            #         print(X_test.shape)
+
             N_EPOCHS = 150
             BATCH_SIZE = 128
 
@@ -215,7 +212,9 @@ def infinite_loop():
                 # saves the final version of the model
                 # which creates 4 files!!!
                 if (i == N_EPOCHS):
-                    saver.save(sess, 'LSTM_15step', global_step=i)
+                    dataset = data_receiving()
+                    name = dataset['name']
+                    saver.save(sess, name, global_step=i)
             predictions, acc_final, loss_final = sess.run([pred_softmax, accuracy, loss],
                                                           feed_dict={X: X_test, Y: y_test})
 
@@ -229,7 +228,9 @@ def infinite_loop():
         if is_predict == True:
             print("starting predictions")
             with tf.Session() as sess2:
-                new_saver = tf.train.import_meta_graph('LSTM_15step-150.meta')
+                dataset = data_receiving()
+                name = dataset['name'] + str(-N_EPOCHS) + ".meta"
+                new_saver = tf.train.import_meta_graph(name)
                 new_saver.restore(sess2, tf.train.latest_checkpoint('./'))
                 currtime = time.time()
                 move = -1
@@ -276,5 +277,5 @@ def infinite_loop():
 if __name__ == "__main__":
     print("Start running!")
     print("I'm so excited!!!!")
-    app.run(host="localhost", port=8000, debug=True)
-    # app.run(host='https://test-n-one-smart-kitchen.azurewebsites.net', port=8000, debug=True)
+    app.run(host="127.0.0.1", port=8080, debug=True)
+    # app.run(host="localhost", port=8000, debug=True)
