@@ -221,7 +221,7 @@ def infinite_loop():
             print()
             print(f'final results: accuracy: {acc_final} loss: {loss_final}')
             sess.close()
-            db.update({'train_done': 1})
+            db.update({'train_done': 1,'current_prediction':-1})
         # end of model training.
 
         # predictions section here
